@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
 from color import Color
-from image import Image
+from vector import Vector
+from point import Point
+from sphere import Sphere
+from scene import Scene
+from engine import RenderEngine
 
 
 def main():
-    WIDTH = 3
-    HEIGHT = 2
-    im = Image(WIDTH, HEIGHT)
-    red = Color(1, 0, 0)
-    green = Color(0, 1, 0)
-    blue = Color(0, 0, 1)
-    im.set_pixel(0, 0, red)
-    im.set_pixel(1, 0, green)
-    im.set_pixel(2, 0, blue)
+    WIDTH = 320
+    HEIGHT = 200
+    camera = Vector(0, 0, -1)
 
-    im.set_pixel(0, 1, red + green)
-    im.set_pixel(1, 1, red + green + blue)
-    im.set_pixel(2, 1, red * 0.001)
+    objects = [
+        Sphere(Point(0, -0.25, 0), 0.1, Color.from_hex("#FF0000")),
+        Sphere(Point(0, 0, 0), 0.1, Color.from_hex("#FFFF00")),
+        Sphere(Point(0, 0.25, 0), 0.1, Color.from_hex("#00FF00")),
+    ]
+    scene = Scene(camera, objects, WIDTH, HEIGHT)
+    engine = RenderEngine()
 
-    with open("test.ppm", "w+") as f:
-        im.write_ppm(f)
+    image = engine.render(scene)
+
+    with open("black.ppm", "w+") as f:
+        image.write_ppm(f)
 
 
 if __name__ == '__main__':
