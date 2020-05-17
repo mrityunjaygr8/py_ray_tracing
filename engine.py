@@ -27,6 +27,7 @@ class RenderEngine:
                 x = x_0 + i * x_step
                 ray = Ray(camera, Point(x, y) - camera)
                 pixels.set_pixel(i, j, self.ray_trace(ray, scene))
+            print("{:3.0f}%".format(float(j)/float(height) * 100), end="\r")
 
         return pixels
 
@@ -39,7 +40,8 @@ class RenderEngine:
             return color
 
         hit_pos = ray.origin + ray.direction * dist_hit
-        color += self.color_at(obj_hit, hit_pos, scene)
+        hit_normal = obj_hit.normal(hit_pos)
+        color += self.color_at(obj_hit, hit_pos, hit_normal, scene)
         return color
 
     def find_nearest(self, ray, scene):
@@ -53,5 +55,26 @@ class RenderEngine:
 
         return (dist_min, obj_hit)
 
-    def color_at(self, obj_hit, hit_pos, scene):
-        return obj_hit.material
+    def color_at(self, obj_hit, hit_pos, hit_normal, scene):
+        material = obj_hit.material
+        obj_color = material.color_at(hit_pos)
+        to_cam = scene.camera - hit_pos
+        specular_k = 50
+        color = material.ambient * Color.from_hex("#000000")
+        for light in scene.lights:
+            to_light = Ray(hit_pos, light.position - hit_pos)
+            # Lambert Shading
+            color += (
+                obj_color
+                * material.diffuse
+                * max(hit_normal.dot(to_light.direction), 0)
+            )
+
+            # Specular Shading
+            half_vector = (to_light.direction + to_cam).normalized()
+            color += (
+                light.color
+                * material.specular
+                * max(hit_normal.dot(half_vector), 0) ** specular_k
+            )
+        return color
